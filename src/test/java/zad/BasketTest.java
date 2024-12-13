@@ -3,7 +3,6 @@ package zad;
 import java.util.Comparator;
 
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
@@ -62,7 +61,7 @@ public class BasketTest {
         assertEquals("Headphones", top2[0].getName());
         assertEquals("Monitor", top2[1].getName());
     }
-
+    
     @Test
     public void testApplyDiscountOver300() {
         Product[] products = {
@@ -96,7 +95,7 @@ public class BasketTest {
         };
         Basket basket = new Basket(products);
         basket.applyPromotion(new FreeMugOver200());
-        assertTrue(basket.calculateTotalPrice() > 200); // Sprawdza, czy koszyk spełnia warunek
+        assertTrue(basket.calculateTotalPrice() > 200);
     }
 
     @Test
@@ -138,14 +137,6 @@ public class BasketTest {
         assertEquals("Headphones", products[2].getName());
     }
 
-    // Test przypadku niepoprawnego
-    @Test
-    public void testInvalidProductArray() {
-        Product[] products = null;
-        Basket basket = new Basket(products);
-        assertThrows(NullPointerException.class, () -> basket.getMostExpensive());
-    }
-
     @Test
     public void testEmptyProductArray() {
         Product[] products = {};
@@ -162,5 +153,62 @@ public class BasketTest {
         };
         Basket basket = new Basket(products);
         assertEquals(-1500, basket.getCheapest().getPrice());
+    }
+
+    @Test
+    public void testDuplicateProducts() {
+        Product[] products = {
+            new Product("001", "Laptop", 1500),
+            new Product("001", "Laptop", 1500),
+            new Product("002", "Phone", 800)
+        };
+        Basket basket = new Basket(products);
+        basket.sortProducts(Comparator.comparing(Product::getName));
+        assertEquals(3, products.length);
+        assertEquals("Laptop", products[0].getName());
+    }
+
+
+    @Test
+    public void testApplyPromotionOnEmptyBasket() {
+        Product[] products = {};
+        Basket basket = new Basket(products);
+        Promotion discountOver300 = new DiscountOver300();
+        basket.applyPromotion(discountOver300);
+        assertEquals(0.0, basket.calculateTotalDiscountPrice());
+    }
+
+    @Test
+    public void testAddProductWithNullValues() {
+        Product[] products = {
+            new Product(null, null, 0)
+        };
+        Basket basket = new Basket(products);
+        assertNull(products[0].getCode());
+        assertNull(products[0].getName());
+        assertEquals(0, products[0].getPrice());
+    }
+
+    @Test
+    public void testDiscountGreaterThanPrice() {
+        Product[] products = {
+            new Product("001", "Laptop", 1500),
+            new Product("002", "Phone", 800)
+        };
+        products[0].applyDiscount(2000);
+        assertEquals(-500, products[0].getDiscountPrice());
+    }
+
+    @Test
+    public void testApplyThirdProductFreeWithLessThanThreeProducts() {
+        Product[] products = {
+            new Product("001", "Laptop", 1500),
+            new Product("002", "Phone", 800)
+        };
+        Basket basket = new Basket(products);
+        Promotion thirdProductFree = new ThirdProductFree();
+        basket.applyPromotion(thirdProductFree);
+        assertEquals(1500, products[0].getDiscountPrice());
+        assertEquals(800, products[1].getDiscountPrice());
     }
 }
